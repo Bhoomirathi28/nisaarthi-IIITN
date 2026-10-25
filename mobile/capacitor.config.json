@@ -1,0 +1,12 @@
+{
+  "appId": "in.nisaarthi.app",
+  "appName": "NISAARTHI",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

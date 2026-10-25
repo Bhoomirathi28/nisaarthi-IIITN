@@ -1,0 +1,31 @@
+{
+  "name": "nisaarthi",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "android": "vite build && npx cap sync android && npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "6.1.2",
+    "@capacitor/app-launcher": "6.0.2",
+    "@capacitor/core": "6.1.2",
+    "@capacitor/geolocation": "6.0.1",
+    "@capacitor/motion": "6.0.2",
+    "@capacitor/network": "6.0.2",
+    "@capacitor/preferences": "6.0.2",
+    "@fontsource/mukta": "5.1.0",
+    "@fontsource/yatra-one": "5.1.0",
+    "maplibre-gl": "4.7.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "6.1.2",
+    "@vitejs/plugin-react": "4.3.3",
+    "vite": "5.4.10"
+  }
+}

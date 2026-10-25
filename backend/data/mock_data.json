@@ -1,0 +1,463 @@
+{
+  "_note": "SAMPLE data for demos and offline mode. Not real places.",
+  "fetched_at": "2026-10-01T00:00:00+05:30",
+  "demo_trip": {
+    "origin": {
+      "lat": 21.129,
+      "lon": 79.095,
+      "name": "Hospital gate (sample)"
+    },
+    "destination": {
+      "lat": 21.1205,
+      "lon": 79.074,
+      "name": "Home (sample)"
+    },
+    "shift_end": "02:15",
+    "reach_by": "03:00",
+    "mode": "walk"
+  },
+  "routes": {
+    "balanced": {
+      "coords": [
+        [
+          21.129,
+          79.095
+        ],
+        [
+          21.1278,
+          79.091
+        ],
+        [
+          21.1265,
+          79.0865
+        ],
+        [
+          21.125,
+          79.082
+        ],
+        [
+          21.1232,
+          79.078
+        ],
+        [
+          21.1215,
+          79.0755
+        ],
+        [
+          21.1205,
+          79.074
+        ]
+      ],
+      "steps": [
+        {
+          "road_class": "primary",
+          "share": 0.45
+        },
+        {
+          "road_class": "secondary",
+          "share": 0.35
+        },
+        {
+          "road_class": "residential",
+          "share": 0.2
+        }
+      ],
+      "turns": 4
+    },
+    "short": {
+      "coords": [
+        [
+          21.129,
+          79.095
+        ],
+        [
+          21.126,
+          79.0922
+        ],
+        [
+          21.1238,
+          79.089
+        ],
+        [
+          21.1225,
+          79.085
+        ],
+        [
+          21.122,
+          79.081
+        ],
+        [
+          21.121,
+          79.077
+        ],
+        [
+          21.1205,
+          79.074
+        ]
+      ],
+      "steps": [
+        {
+          "road_class": "residential",
+          "share": 0.55
+        },
+        {
+          "road_class": "tertiary",
+          "share": 0.25
+        },
+        {
+          "road_class": "secondary",
+          "share": 0.2
+        }
+      ],
+      "turns": 9
+    },
+    "less_maneuvers": {
+      "coords": [
+        [
+          21.129,
+          79.095
+        ],
+        [
+          21.1302,
+          79.089
+        ],
+        [
+          21.1295,
+          79.083
+        ],
+        [
+          21.127,
+          79.078
+        ],
+        [
+          21.1235,
+          79.075
+        ],
+        [
+          21.1205,
+          79.074
+        ]
+      ],
+      "steps": [
+        {
+          "road_class": "trunk",
+          "share": 0.3
+        },
+        {
+          "road_class": "tertiary",
+          "share": 0.4
+        },
+        {
+          "road_class": "residential",
+          "share": 0.3
+        }
+      ],
+      "turns": 3
+    }
+  },
+  "places": [
+    {
+      "id": "mock-0",
+      "kind": "pharmacy",
+      "name": "24x7 medical store",
+      "lat": 21.128776,
+      "lon": 79.092952,
+      "opening_hours": "24/7"
+    },
+    {
+      "id": "mock-1",
+      "kind": "food",
+      "name": "Night chai stall",
+      "lat": 21.12752,
+      "lon": 79.091366,
+      "opening_hours": "Mo-Su 22:00-05:00"
+    },
+    {
+      "id": "mock-2",
+      "kind": "fuel",
+      "name": "Petrol pump",
+      "lat": 21.127359,
+      "lon": 79.088136,
+      "opening_hours": "24/7"
+    },
+    {
+      "id": "mock-3",
+      "kind": "atm",
+      "name": "ATM kiosk",
+      "lat": 21.125972,
+      "lon": 79.086115,
+      "opening_hours": "24/7"
+    },
+    {
+      "id": "mock-4",
+      "kind": "food",
+      "name": "Late-night snacks",
+      "lat": 21.125634,
+      "lon": 79.082701,
+      "opening_hours": "Mo-Su 18:00-03:00"
+    },
+    {
+      "id": "mock-5",
+      "kind": "shop",
+      "name": "General store",
+      "lat": 21.123916,
+      "lon": 79.080557,
+      "opening_hours": "Mo-Su 07:00-23:00"
+    },
+    {
+      "id": "mock-6",
+      "kind": "food",
+      "name": "Bun-maska counter",
+      "lat": 21.123579,
+      "lon": 79.077876,
+      "opening_hours": "Mo-Su 20:00-04:00"
+    },
+    {
+      "id": "mock-7",
+      "kind": "pharmacy",
+      "name": "Medical store",
+      "lat": 21.121469,
+      "lon": 79.076196,
+      "opening_hours": "Mo-Su 08:00-02:00"
+    },
+    {
+      "id": "mock-8",
+      "kind": "cctv",
+      "name": "CCTV camera",
+      "lat": 21.127576,
+      "lon": 79.089332,
+      "opening_hours": null
+    },
+    {
+      "id": "mock-9",
+      "kind": "cctv",
+      "name": "CCTV camera",
+      "lat": 21.125494,
+      "lon": 79.084283,
+      "opening_hours": null
+    },
+    {
+      "id": "mock-10",
+      "kind": "cctv",
+      "name": "CCTV camera",
+      "lat": 21.124041,
+      "lon": 79.079225,
+      "opening_hours": null
+    },
+    {
+      "id": "mock-11",
+      "kind": "cctv",
+      "name": "CCTV camera",
+      "lat": 21.120933,
+      "lon": 79.075149,
+      "opening_hours": null
+    },
+    {
+      "id": "mock-12",
+      "kind": "transport",
+      "name": "Bus stop",
+      "lat": 21.127143,
+      "lon": 79.08694,
+      "opening_hours": null
+    },
+    {
+      "id": "mock-13",
+      "kind": "transport",
+      "name": "Auto stand",
+      "lat": 21.124377,
+      "lon": 79.081905,
+      "opening_hours": "24/7"
+    },
+    {
+      "id": "mock-14",
+      "kind": "shop",
+      "name": "Kirana store",
+      "lat": 21.128274,
+      "lon": 79.093742,
+      "opening_hours": "Mo-Su 09:00-22:00"
+    },
+    {
+      "id": "mock-15",
+      "kind": "shop",
+      "name": "Mobile shop",
+      "lat": 21.12699,
+      "lon": 79.093704,
+      "opening_hours": "Mo-Sa 10:00-21:00"
+    },
+    {
+      "id": "mock-16",
+      "kind": "food",
+      "name": "Paan shop",
+      "lat": 21.127077,
+      "lon": 79.092625,
+      "opening_hours": "Mo-Su 10:00-01:00"
+    },
+    {
+      "id": "mock-17",
+      "kind": "shop",
+      "name": "Bakery",
+      "lat": 21.125964,
+      "lon": 79.092747,
+      "opening_hours": "Mo-Su 07:00-22:00"
+    },
+    {
+      "id": "mock-18",
+      "kind": "shop",
+      "name": "Hardware shop",
+      "lat": 21.122572,
+      "lon": 79.082874,
+      "opening_hours": "Mo-Sa 09:00-20:00"
+    },
+    {
+      "id": "mock-19",
+      "kind": "food",
+      "name": "Tea stall",
+      "lat": 21.120813,
+      "lon": 79.077753,
+      "opening_hours": null
+    },
+    {
+      "id": "mock-20",
+      "kind": "cctv",
+      "name": "CCTV camera",
+      "lat": 21.123577,
+      "lon": 79.087499,
+      "opening_hours": null
+    },
+    {
+      "id": "mock-21",
+      "kind": "fuel",
+      "name": "Petrol pump",
+      "lat": 21.130301,
+      "lon": 79.089695,
+      "opening_hours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "id": "mock-22",
+      "kind": "transport",
+      "name": "Taxi stand",
+      "lat": 21.129278,
+      "lon": 79.08397,
+      "opening_hours": "24/7"
+    },
+    {
+      "id": "mock-23",
+      "kind": "food",
+      "name": "Night chai stall",
+      "lat": 21.123705,
+      "lon": 79.074668,
+      "opening_hours": "Mo-Su 21:00-04:00"
+    },
+    {
+      "id": "mock-24",
+      "kind": "cctv",
+      "name": "CCTV camera",
+      "lat": 21.130222,
+      "lon": 79.087273,
+      "opening_hours": null
+    },
+    {
+      "id": "mock-25",
+      "kind": "cctv",
+      "name": "CCTV camera",
+      "lat": 21.126712,
+      "lon": 79.078125,
+      "opening_hours": null
+    },
+    {
+      "id": "mock-help-0",
+      "opening_hours": null,
+      "kind": "police",
+      "name": "Police station (sample)",
+      "lat": 21.1246,
+      "lon": 79.0832,
+      "phone": "112"
+    },
+    {
+      "id": "mock-help-1",
+      "opening_hours": null,
+      "kind": "police",
+      "name": "Police chowki (sample)",
+      "lat": 21.1272,
+      "lon": 79.0945,
+      "phone": "112"
+    },
+    {
+      "id": "mock-help-2",
+      "opening_hours": "24/7",
+      "kind": "hospital",
+      "name": "Hospital (sample)",
+      "lat": 21.1293,
+      "lon": 79.0958,
+      "phone": "108"
+    }
+  ],
+  "search_places": [
+    {
+      "name": "Hospital gate (sample)",
+      "address": "Sample trip start",
+      "lat": 21.129,
+      "lon": 79.095
+    },
+    {
+      "name": "Home (sample)",
+      "address": "Sample trip end",
+      "lat": 21.1205,
+      "lon": 79.074
+    },
+    {
+      "name": "Sitabuldi",
+      "address": "Nagpur (approximate, sample)",
+      "lat": 21.1446,
+      "lon": 79.0822
+    },
+    {
+      "name": "Nagpur Railway Station",
+      "address": "Nagpur (approximate, sample)",
+      "lat": 21.1526,
+      "lon": 79.088
+    },
+    {
+      "name": "Dharampeth",
+      "address": "Nagpur (approximate, sample)",
+      "lat": 21.1405,
+      "lon": 79.064
+    },
+    {
+      "name": "Sadar",
+      "address": "Nagpur (approximate, sample)",
+      "lat": 21.16,
+      "lon": 79.08
+    },
+    {
+      "name": "Hingna",
+      "address": "Near Nagpur (approximate, sample)",
+      "lat": 21.071,
+      "lon": 78.962
+    },
+    {
+      "name": "Kamptee",
+      "address": "Near Nagpur (approximate, sample)",
+      "lat": 21.223,
+      "lon": 79.198
+    },
+    {
+      "name": "Butibori MIDC",
+      "address": "Near Nagpur (approximate, sample)",
+      "lat": 20.933,
+      "lon": 78.96
+    }
+  ],
+  "advisories": [
+    {
+      "kind": "incident",
+      "title": "Sample: poorly lit stretch reported near a lane on the short route",
+      "url": null
+    },
+    {
+      "kind": "closure",
+      "title": "Sample: night roadwork on a side road, check before leaving",
+      "url": null
+    }
+  ]
+}
