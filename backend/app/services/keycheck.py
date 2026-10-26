@@ -1,6 +1,7 @@
 """Checks each API key with one small live call, for /health?check=true.
 Statuses: working, not_set, rejected (key refused), model_not_found (Nebius), error (network or service problem).
-Costs per check: Geoapify 1 request, Tavily 1 credit, Nebius none (model list), TomTom 1 request."""
+Costs per check: Geoapify 1 request, Tavily 1 credit, Nebius none (model list), TomTom 1 request,
+Mapillary 1 request."""
 import asyncio
 
 import httpx
@@ -57,11 +58,23 @@ async def tomtom(client):
     return {"status": "working"}
 
 
+async def mapillary(client):
+    r = await client.get("https://graph.mapillary.com/images",
+                         params={"bbox": f"{config.CITY_LON},{config.CITY_LAT},{config.CITY_LON + 0.01},{config.CITY_LAT + 0.01}",
+                                 "fields": "id", "limit": 1},
+                         headers={"Authorization": f"OAuth {config.MAPILLARY_TOKEN}"})
+    if _rejected(r) or r.status_code == 500 and "OAuth" in r.text:  # Mapillary answers a bad token with 500
+        return {"status": "rejected"}
+    r.raise_for_status()
+    return {"status": "working", "photos_near_city_centre": bool(r.json().get("data"))}
+
+
 CHECKS = {
     "geoapify": (lambda: config.GEOAPIFY_API_KEY, geoapify),
     "tavily": (lambda: config.TAVILY_API_KEY, tavily),
     "nebius": (lambda: config.NEBIUS_API_KEY, nebius),
     "tomtom": (lambda: config.TOMTOM_API_KEY, tomtom),
+    "mapillary": (lambda: config.MAPILLARY_TOKEN, mapillary),
 }
 
 

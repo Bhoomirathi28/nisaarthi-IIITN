@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from . import config
 from .engine import confidence as C
 from .engine import geo, scoring
-from .services import cache, geoapify, mockdata, nebius, overpass, tavily, tomtom, weather
+from .services import cache, geoapify, mapillary, mockdata, nebius, overpass, tavily, tomtom, weather
 
 TILE_DEG = 0.03             # places are fetched and cached in squares about 3 km wide
 CORRIDOR_DEG = 0.006        # about 600 m either side of a route
@@ -68,67 +68,83 @@ def _tile_box(tile):
     return (s, w, s + TILE_DEG, w + TILE_DEG)
 
 
-async def _tile_cctv(tile):
-    """Cameras for one square from Overpass. None when unknown (Overpass busy)."""
-    key = ("cctv", *tile)
+async def _tile_cameras(tile):
+    """{"cams": [...], "surveyed": bool} for one square, or None when no camera source answered.
+    Sources: Mapillary detections (needs MAPILLARY_TOKEN) and OpenStreetMap man_made=surveillance.
+    "surveyed" means someone actually looked (Mapillary has photos here, or OSM lists cameras);
+    an empty square nobody surveyed stays UNKNOWN instead of counting as "no cameras"."""
+    key = ("cameras", *tile)
     _, fresh = cache.get(key, config.PLACES_FRESH_MINUTES * 60)
-    if fresh is not None:
-        return fresh
+    if fresh is not None or config.FORCE_MOCK:
+        return fresh if fresh is not None else cache.get(key)[1]
     failed = _cctv_failed_at.get(tile)
     if failed and (datetime.now(timezone.utc) - failed).total_seconds() < CCTV_RETRY_S:
         return cache.get(key)[1]
-    try:
-        # Cameras are a bonus: never hold up a plan for long waiting on a busy Overpass
-        cams = await asyncio.wait_for(overpass.cctv(_tile_box(tile)), CCTV_WAIT_S)
-        cache.put(key, cams)
-        return cams
-    except Exception:
+    box = _tile_box(tile)
+
+    async def from_mapillary():
+        if not config.MAPILLARY_TOKEN:
+            raise RuntimeError("no token")
+        return await asyncio.wait_for(mapillary.cameras(box), CCTV_WAIT_S)
+
+    async def from_osm():
+        # Cameras are one factor of six: never hold up a plan long waiting on a busy Overpass
+        return await asyncio.wait_for(overpass.cctv(box), CCTV_WAIT_S)
+
+    mly, osm = await asyncio.gather(from_mapillary(), from_osm(), return_exceptions=True)
+    if isinstance(mly, Exception) and isinstance(osm, Exception):
         _cctv_failed_at[tile] = datetime.now(timezone.utc)
         return cache.get(key)[1]
+    cams, surveyed = [], False
+    if not isinstance(mly, Exception):
+        cams += mly[0]
+        surveyed = mly[1]
+    if not isinstance(osm, Exception):
+        cams += osm
+        surveyed = surveyed or bool(osm)
+    record = {"cams": cams, "surveyed": surveyed}
+    cache.put(key, record)
+    return record
 
 
 async def _tile_places(tile):
-    """(places, cctv_known, state) for one square."""
-    key = ("places", *tile)
+    """(places, state) for one square: Geoapify Places, then Overpass, then the saved copy."""
+    key = ("places-v2", *tile)
     _, fresh = cache.get(key, config.PLACES_FRESH_MINUTES * 60)
     if fresh is not None:
-        cams = await _tile_cctv(tile) if not fresh["cctv_known"] else []
-        if cams is not None and not fresh["cctv_known"]:
-            fresh = {"places": fresh["places"] + cams, "cctv_known": True}
-            cache.put(key, fresh)
-        return fresh["places"], fresh["cctv_known"], "live"
+        return fresh, "live"
     if not config.FORCE_MOCK:
         box = _tile_box(tile)
         try:
-            places, cams = await asyncio.gather(geoapify.places(box), _tile_cctv(tile))
-            record = {"places": places + (cams or []), "cctv_known": cams is not None}
+            places = await geoapify.places(box)
         except Exception:
-            try:  # Overpass returns cameras too
-                record = {"places": await overpass.places(box), "cctv_known": True}
+            try:
+                places = [p for p in await overpass.places(box) if p["kind"] != "cctv"]
             except Exception:
-                record = None
-        if record is not None:
-            cache.put(key, record)
-            return record["places"], record["cctv_known"], "live"
+                places = None
+        if places is not None:
+            cache.put(key, places)
+            return places, "live"
     _, old = cache.get(key)
     if old is not None:
-        return old["places"], old["cctv_known"], "cached"
-    return [], False, "none"
+        return old, "cached"
+    return [], "none"
 
 
 async def _places_along(point_lists):
+    """(places including cameras, cctv_known, state) for the squares along the routes."""
     points = [p for pts in point_lists for p in pts[::5]] + [p for pts in point_lists for p in pts[-1:]]
     tiles = _tiles_near(points)[:MAX_TILES]
-    results = await asyncio.gather(*[_tile_places(t) for t in tiles])
+    results, cameras = await asyncio.gather(asyncio.gather(*[_tile_places(t) for t in tiles]),
+                                            asyncio.gather(*[_tile_cameras(t) for t in tiles]))
     places, seen = [], set()
-    for ps, _, _ in results:
-        for p in ps:
-            if p["id"] not in seen:
-                seen.add(p["id"])
-                places.append(p)
-    states = {s for _, _, s in results}
+    for p in [p for ps, _ in results for p in ps] + [c for rec in cameras if rec for c in rec["cams"]]:
+        if p["id"] not in seen:
+            seen.add(p["id"])
+            places.append(p)
+    states = {s for _, s in results}
     state = "none" if states == {"none"} else "cached" if states - {"live"} else "live"
-    cctv_known = all(k for _, k, s in results if s != "none") and state != "none"
+    cctv_known = any(rec and rec["surveyed"] for rec in cameras)
     return places, cctv_known, state
 
 

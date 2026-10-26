@@ -9,7 +9,7 @@ from app import config
 from app.main import app
 from app.services import keycheck
 
-KEYS = ["GEOAPIFY_API_KEY", "TAVILY_API_KEY", "NEBIUS_API_KEY", "TOMTOM_API_KEY", "NEBIUS_MODEL"]
+KEYS = ["GEOAPIFY_API_KEY", "TAVILY_API_KEY", "NEBIUS_API_KEY", "TOMTOM_API_KEY", "MAPILLARY_TOKEN", "NEBIUS_MODEL"]
 
 
 @pytest.fixture
@@ -72,5 +72,5 @@ def test_env_example_has_no_real_keys():
     """Keys belong in backend/.env (git-ignored), never in the committed .env.example."""
     example = (config.BASE_DIR / ".env.example").read_text(encoding="utf-8")
     filled = [line.split("=")[0] for line in example.splitlines()
-              if line.split("=")[0].endswith("_KEY") and line.split("=", 1)[1].strip()]
+              if line.split("=")[0].endswith(("_KEY", "_TOKEN")) and line.split("=", 1)[1].strip()]
     assert filled == [], f"Move these to backend/.env and leave them empty in .env.example: {filled}"

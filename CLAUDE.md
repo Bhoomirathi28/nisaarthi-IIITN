@@ -40,6 +40,6 @@ Hackathon: Theme 1, Problem 1.1 "The City That Sleeps While You Work". Demo city
 
 ## Open items
 - Coverage label: one nearby place with unknown hours makes the coverage label, and so the route's confidence, UNKNOWN (coverage.py takes the worst label). Most Nagpur routes show UNKNOWN. Team to decide if that is intended.
-- CCTV comes only from Overpass, which is often down; CCTV then shows UNKNOWN.
+- CCTV factor: camera *locations* per km (cameras within 50 m = one location) from Mapillary photo detections (needs `MAPILLARY_TOKEN`, PROBABLE) and OpenStreetMap `man_made=surveillance` (only 1 point in all Nagpur as of Oct 2026). An area nobody surveyed is UNKNOWN, not zero. Nagpur's ~3,686 Safe City cameras at 671 junctions have no public coordinate list. Mapillary token not yet added.
 - Peer-to-peer feature from the original notes: not defined, not built.
 - Nemotron model ID: copy the exact ID from the Nebius Token Factory catalog into `NEBIUS_MODEL`.

@@ -147,3 +147,59 @@ def test_real_trip_never_gets_sample_places(offline):
     assert res["data_status"]["places"] == "none"
     assert r["factors"]["coverage"]["score"] is None and r["factors"]["coverage"]["label"] == "UNKNOWN"
     assert r["police_on_route"] == [] and r["cover_places"] == []
+
+
+# ---- Cameras (Mapillary + OpenStreetMap) ----
+
+from app.engine import scoring
+from app.services import mapillary
+
+
+def test_ten_cameras_on_one_square_count_as_one_location():
+    square = [{"lat": 21.1446 + i * 0.00003, "lon": 79.0822} for i in range(10)]   # spread over ~30 m
+    other = [{"lat": 21.1500, "lon": 79.0900}]
+    assert len(scoring.camera_locations(square)) == 1
+    assert len(scoring.camera_locations(square + other)) == 2
+
+
+def _route():
+    return {"coords": [(21.140, 79.080), (21.150, 79.080)], "duration_s": 600, "steps": [], "turns": 2,
+            "route_label": "KNOWN", "poi_label": "KNOWN"}
+
+
+def test_unsurveyed_area_is_unknown_not_zero():
+    res = scoring.score_route({**_route(), "cctv_known": False}, [], datetime.now(IST))
+    assert res["factors"]["cctv"]["score"] is None and res["factors"]["cctv"]["label"] == "UNKNOWN"
+
+
+def test_surveyed_area_with_cameras_scores_locations_as_probable():
+    now = datetime.now(timezone.utc).isoformat()
+    cams = [{"id": f"mly-{i}", "kind": "cctv", "lat": 21.145 + i * 0.00002, "lon": 79.0801,
+             "source": "inferred", "fetched_at": now} for i in range(5)]
+    res = scoring.score_route({**_route(), "cctv_known": True}, cams, datetime.now(IST))
+    f = res["factors"]["cctv"]
+    assert f["value"] == {"count": 1, "cameras": 5}
+    assert f["label"] == "PROBABLE"  # detected in photos, never KNOWN
+
+
+def test_mapillary_reads_cameras_and_photo_coverage(monkeypatch):
+    monkeypatch.setattr(config, "MAPILLARY_TOKEN", "test")
+    old_ms = (datetime.now(timezone.utc) - timedelta(days=5 * 365)).timestamp() * 1000
+
+    def handler(req):
+        if req.url.path.endswith("/map_features"):
+            assert "object--cctv-camera" in str(req.url)
+            return httpx.Response(200, json={"data": [
+                {"id": "1", "geometry": {"type": "Point", "coordinates": [79.08, 21.14]}, "last_seen_at": None},
+                {"id": "2", "geometry": {"type": "Point", "coordinates": [79.09, 21.15]}, "last_seen_at": old_ms}]})
+        return httpx.Response(200, json={"data": [{"id": "img"}]})
+    cams, surveyed = asyncio.run(mapillary.cameras((21.1, 79.0, 21.2, 79.1), transport=httpx.MockTransport(handler)))
+    assert [c["id"] for c in cams] == ["mly-1"]  # the camera last seen 5 years ago is not counted
+    assert cams[0]["lat"] == 21.14 and surveyed
+
+
+def test_mapillary_no_photos_means_not_surveyed(monkeypatch):
+    monkeypatch.setattr(config, "MAPILLARY_TOKEN", "test")
+    handler = lambda req: httpx.Response(200, json={"data": []})
+    cams, surveyed = asyncio.run(mapillary.cameras((21.1, 79.0, 21.2, 79.1), transport=httpx.MockTransport(handler)))
+    assert cams == [] and surveyed is False

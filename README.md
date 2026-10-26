@@ -117,7 +117,7 @@ This prints a summary (night clips per city, how many night cameras were in infr
 | Open help points nearby | 0.15 | Police, hospitals and open pharmacies within 500 m |
 | Fewer turns | 0.10 | Turns per km |
 | Transport locations listed open | 0.10 | Auto, taxi, bus and rail points with opening hours that say open |
-| CCTV cameras | 0.10 | OpenStreetMap `man_made=surveillance` per km |
+| CCTV cameras | 0.10 | Camera locations per km (cameras within 50 m count once), from Mapillary street-photo detections (PROBABLE) and OpenStreetMap `man_made=surveillance`; UNKNOWN where nobody has surveyed |
 
 A factor with no data is marked UNKNOWN and left out; the remaining weights are rescaled. Bad weather lowers the score (never raises it). Routes are ranked **safest feasible first**: a route that gets you home by your deadline beats a safer one that makes you late.
 

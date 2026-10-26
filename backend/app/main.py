@@ -125,6 +125,7 @@ async def health(check: bool = False):
             "tavily": bool(config.TAVILY_API_KEY),
             "nebius": bool(config.NEBIUS_API_KEY and config.NEBIUS_MODEL),
             "tomtom": bool(config.TOMTOM_API_KEY),
+            "mapillary": bool(config.MAPILLARY_TOKEN),
             "overpass": True,
             "open_meteo": True,
         },

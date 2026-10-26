@@ -197,6 +197,7 @@ export default function Routes({ plan, error, online, runPlan, onEdit }) {
               <p className="card-facts small">
                 {cov?.score != null && <span>{t("covered_pct", { pct: Math.round(cov.value.covered_share * 100) })}</span>}
                 {unknown > 0 && <span className="unknown-hours">◌ {t("unknown_hours", { n: unknown })}</span>}
+                {r.factors.cctv?.score != null && <span>{t("cameras_at", { n: r.factors.cctv.value.count })}</span>}
               </p>
               {open && <RouteDetails r={r} label={label} t={t} />}
             </li>

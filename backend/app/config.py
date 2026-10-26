@@ -13,6 +13,7 @@ NEBIUS_BASE_URL = os.getenv("NEBIUS_BASE_URL", "https://api.tokenfactory.nebius.
 # Exact model ID from the Token Factory catalog; the AI estimate stays off until it is set
 NEBIUS_MODEL = os.getenv("NEBIUS_MODEL", "").strip()
 TOMTOM_API_KEY = os.getenv("TOMTOM_API_KEY", "").strip()
+MAPILLARY_TOKEN = os.getenv("MAPILLARY_TOKEN", "").strip()
 OVERPASS_URL = os.getenv("OVERPASS_URL", "https://overpass-api.de/api/interpreter").strip()
 # Tried in order; the public Overpass servers are often busy
 OVERPASS_URLS = [OVERPASS_URL, "https://overpass.kumi.systems/api/interpreter"]

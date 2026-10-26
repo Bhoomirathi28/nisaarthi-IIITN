@@ -53,6 +53,19 @@ def place_status(poi, eta, fresh_minutes, now=None):
     return None, C.UNKNOWN
 
 
+CAMERA_SPOT_M = 50  # cameras closer than this are one location (one junction, one building)
+
+
+def camera_locations(cams):
+    """Group cameras into locations, so a square with ten cameras counts as one place watched."""
+    spots = []
+    for c in cams:
+        here = (c["lat"], c["lon"])
+        if not any(geo.haversine(here, s) <= CAMERA_SPOT_M for s in spots):
+            spots.append(here)
+    return spots
+
+
 def score_route(route, pois, departure, fresh_minutes=15, now=None):
     coords = geo.densify(route["coords"])
     cum = geo.cumulative(coords)
@@ -151,14 +164,16 @@ def score_route(route, pois, departure, fresh_minutes=15, now=None):
         "label": labels_of(transport, empty_label),
     }
 
-    # 7. CCTV cameras (unknown when the camera source was unavailable, not "none")
+    # 7. CCTV cameras: camera locations per km, so ten cameras on one square count once.
+    # Unknown (left out of the score) when nobody has surveyed the area, rather than "no cameras".
     cams = [p for p in near if p["kind"] in CCTV_KINDS]
-    if route.get("cctv_known") is False:
+    spots = camera_locations(cams)
+    if route.get("cctv_known") is False and not cams:
         factors["cctv"] = {"score": None, "value": None, "label": C.UNKNOWN}
     else:
         factors["cctv"] = {
-            "score": _clamp((len(cams) / length_km) / 3.0),
-            "value": {"count": len(cams)},
+            "score": _clamp((len(spots) / length_km) / 3.0),
+            "value": {"count": len(spots), "cameras": len(cams)},
             "label": labels_of(cams, empty_label),
         }
 
