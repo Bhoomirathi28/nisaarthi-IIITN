@@ -21,7 +21,7 @@ Hackathon: Theme 1, Problem 1.1 "The City That Sleeps While You Work". Demo city
 |---|---|---|
 | 1 | Sign-up page (language, name, mobile, 1–5 emergency contacts). No OTP. Token kept on phone, never asks to log in again. Works offline, syncs later. | Done |
 | 2 | Trip page: source (current location or search), up to 3 optional stops, destination, departure time, arrival deadline, Search button. Use Geoapify autocomplete. Move sample trip from Pune to Nagpur. Every search dropdown ends with "Choose on map"; search allows ~40 km around Nagpur. | Done (team check pending) |
-| 3 | Routes page: all routes ranked by safety score, with traffic (TomTom free tier, fallback to time-of-night estimate labelled PROBABLE), weather, Tavily past incidents per road, Nebius Nemotron safety + feasibility scores, booking links, nearby police stations, siren button. | Planned |
+| 3 | Routes page: all routes ranked by safety score, with traffic (TomTom free tier, fallback to time-of-night estimate labelled PROBABLE), weather, Tavily past incidents per road, Nebius Nemotron safety + feasibility scores, booking links, nearby police stations, siren button. | Done (team check pending) |
 | 4 | Shake opens the app even when closed (native Kotlin foreground service + persistent notification), automatic offline SOS SMS via SEND_SMS, loud siren. | Planned |
 | 5 | Feedback: post-trip rating and corrections ("shop was closed", "stretch was dark") that adjust place data and scoring weights. | Planned |
 | 6 | Novelty **Rider Eyes**: riders' phones act as moving CCTV; frames → street check → live lighting/activity map used in safety scores. Only scores stored, images deleted, faces never kept. How riders are identified (Settings switch vs sign-up question) is **still to be decided by the team**. | Street check done |
@@ -39,6 +39,7 @@ Hackathon: Theme 1, Problem 1.1 "The City That Sleeps While You Work". Demo city
 - No public Nagpur CCTV footage exists. Team may record its own Nagpur night clips for the demo (blur faces).
 
 ## Open items
+- Coverage label: one nearby place with unknown hours makes the coverage label, and so the route's confidence, UNKNOWN (coverage.py takes the worst label). Most Nagpur routes show UNKNOWN. Team to decide if that is intended.
+- CCTV comes only from Overpass, which is often down; CCTV then shows UNKNOWN.
 - Peer-to-peer feature from the original notes: not defined, not built.
 - Nemotron model ID: copy the exact ID from the Nebius Token Factory catalog into `NEBIUS_MODEL`.
-- TomTom key needed before Phase 3.

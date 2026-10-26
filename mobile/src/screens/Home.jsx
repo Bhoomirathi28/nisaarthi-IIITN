@@ -6,9 +6,9 @@ import { IconGear } from "../components/Icons";
 import { aged } from "../lib/labels";
 import { clock, minutesSince } from "../lib/time";
 
-export default function Home({ plan, online, sosHint, onSos, goPlan, goSettings }) {
+export default function Home({ plan, online, sosHint, onSos, goPlan, goRoutes, goSettings }) {
   const { t } = useT();
-  const best = plan?.routes?.[0];
+  const best = plan?.routes?.[0]?.factors?.coverage ? plan.routes[0] : null; // ignore plans from older versions
   return (
     <div className="home">
       <header className="topbar">
@@ -33,7 +33,7 @@ export default function Home({ plan, online, sosHint, onSos, goPlan, goSettings 
       </section>
 
       {best && (
-        <button className="panel last-plan" onClick={goPlan}>
+        <button className="panel last-plan" onClick={goRoutes}>
           <ScoreRing value={best.reliability} size={64} />
           <div>
             <p className="last-title">{t("last_plan")}</p>

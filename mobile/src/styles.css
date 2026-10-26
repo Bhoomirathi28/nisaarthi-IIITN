@@ -304,3 +304,37 @@ input:focus { border-color: var(--haldi); outline: none; }
 .contact-entry { margin: 12px 0; padding-bottom: 12px; border-bottom: 1px dashed rgba(233, 178, 60, 0.2); }
 .contact-entry input { width: 100%; }
 .field-error { color: #F07A69; font-size: 14px; margin: 4px 0 0; }
+
+/* Page header with the siren button */
+.page-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.page-head .screen-title { margin-bottom: 8px; }
+.siren-btn {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 14px 6px 10px;
+  border-radius: 999px; border: 1.5px solid var(--sindoor); background: rgba(210, 65, 47, 0.14);
+  color: #F5B3A8; font-weight: 600; cursor: pointer;
+}
+.siren-btn.on { background: var(--sindoor); color: #fff; animation: siren-pulse 0.8s ease-in-out infinite alternate; }
+@keyframes siren-pulse { from { box-shadow: 0 0 0 0 rgba(210, 65, 47, 0.6); } to { box-shadow: 0 0 0 8px rgba(210, 65, 47, 0); } }
+.btn-siren { background: transparent; border: 2px solid #fff; color: #fff; font-size: 22px; min-height: 64px; }
+.btn-siren.on { background: #fff; color: #5E1A14; }
+
+/* Routes page */
+.route-cards { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 10px; }
+.route-card { margin: 0; padding: 12px 14px; scroll-margin-top: 12px; }
+.route-card.open { padding: 16px; }
+.route-card-head {
+  width: 100%; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
+  background: none; border: 0; padding: 0; text-align: left; cursor: pointer;
+}
+.route-card-meta { display: grid; line-height: 1.35; }
+.route-name { font-family: "Yatra One", "Mukta", serif; font-weight: 400; font-size: 20px; }
+.strip-compact { margin: 6px 0 0; }
+.card-facts { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 2px 0 0; color: var(--muted); }
+.unknown-hours { color: var(--ash); }
+.route-details { margin-top: 10px; padding-top: 6px; border-top: 1px dashed var(--line); }
+.detail-block { margin-top: 6px; }
+.report-meta { display: block; font-size: 13px; color: var(--muted); }
+.police-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.police-list li { display: grid; gap: 2px; }
+.police-list .row-gap { margin: 4px 0 0; }
+.poi-half { background: var(--ink) !important; border-color: var(--haldi) !important; }

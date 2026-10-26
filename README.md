@@ -18,11 +18,21 @@ The Android app is React + Vite wrapped with Capacitor. The backend is Python + 
 |---|---|---|
 | 1 | Sign-up page: language, name, mobile, emergency contacts; stays signed in; works offline | **Done** |
 | 2 | Trip page: source, optional stops, destination, departure time, arrival deadline, search | **Done** (team check pending) |
-| 3 | Routes page: all routes by safety score, coverage-based shop spacing, open-when-you-reach, TomTom traffic, weather, Tavily incidents, Nemotron scores, booking links, police stations, siren | Planned |
+| 3 | Routes page: all routes by safety score, coverage-based shop spacing, open-when-you-reach, TomTom traffic, weather, Tavily incidents, Nemotron scores, booking links, police stations, siren | **Done** (team check pending) |
 | 4 | Safety layer: shake opens the app even when closed, automatic offline SOS SMS, siren | Planned |
 | 5 | Feedback loop: post-trip ratings and corrections improve scores | Planned |
 | 6 | Novelty, "Rider Eyes": delivery riders' phones act as moving CCTV, live street lighting and activity scores | Street check built and runs on TrafficCAM; phone capture and map planned |
 | 7 | 12 regional languages and the hand-drawn Madhubani redesign | Planned |
+
+### Phase 3 details
+
+- Routes page: every route as a card, safest route that meets the deadline first. Each card shows score, arrival, minutes to spare, how much of the route is covered by open places, and how many nearby places have unknown hours. Tap a card for details.
+- Coverage scoring (`engine/coverage.py`) replaces the old open-places and spacing factors: share of the route within 300 m of a place open when you reach it, longest dark stretch, darkness near home weighted worse. Unknown hours never count; police and hospitals count as half cover (PROBABLE).
+- Places: Geoapify Places, then Overpass, then a copy saved on disk (24 h, per 3 km square), never sample places for a real trip. CCTV from Overpass only.
+- Traffic: TomTom for two-wheeler and car trips leaving within 30 minutes; otherwise a time-of-night estimate (PROBABLE).
+- Past incidents: Tavily news for the 3 longest named roads of each route, kept only if the article names the full road, shown with its date; over a year old is OUTDATED. Cached 7 days.
+- Nemotron: one call for all routes, a second opinion that does not change the ranking.
+- Siren button on the trip and routes pages.
 
 ### Phase 2 details
 

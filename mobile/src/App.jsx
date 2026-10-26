@@ -7,6 +7,7 @@ import BottomNav from "./components/BottomNav";
 import SosOverlay from "./components/SosOverlay";
 import Home from "./screens/Home";
 import Plan from "./screens/Plan";
+import Routes from "./screens/Routes";
 import Help from "./screens/Help";
 import Contacts from "./screens/Contacts";
 import Settings from "./screens/Settings";
@@ -29,6 +30,7 @@ export default function App() {
   const [planning, setPlanning] = useState(false);
   const [online, setOnline] = useState(true);
   const [tab, setTab] = useState("home");
+  const [routeView, setRouteView] = useState("trip"); // the Route tab shows the trip page or the routes page
   const [sos, setSos] = useState(false);
   const [session, setSession] = useState(null);
 
@@ -41,6 +43,7 @@ export default function App() {
         load("home", null), load("lastPlan", null), load("trip", DEFAULT_TRIP),
       ]);
       setLang(l); setSettings({ ...DEFAULT_SETTINGS, ...s }); setContacts(c); setHome(h); setPlan(p);
+      if (p?.trip && p.routes?.[0]?.factors?.coverage) setRouteView("routes"); // skip plans saved by older versions
       setTrip({ ...DEFAULT_TRIP, ...tr });
       setApiBase(s.server);
       setOnline(await isOnline());
@@ -142,12 +145,16 @@ export default function App() {
         <main className="screen">
           {tab === "home" && (
             <Home plan={plan} online={online} sosHint={settings.shake ? "sos_hint" : "sos_hint_noshake"}
-              onSos={() => setSos(true)} goPlan={() => setTab("plan")} goSettings={() => setTab("settings")} />
+              onSos={() => setSos(true)} goPlan={() => { setRouteView("trip"); setTab("plan"); }}
+              goRoutes={() => { setRouteView("routes"); setTab("plan"); }} goSettings={() => setTab("settings")} />
           )}
-          {tab === "plan" && (
-            <Plan trip={trip} setTrip={updateTrip} plan={plan} planning={planning} error={planError}
-              online={online} home={home} setHome={updateHome} runPlan={runPlan} />
-          )}
+          {tab === "plan" && (routeView === "routes" && plan ? (
+            <Routes plan={plan} error={planError} online={online} runPlan={runPlan}
+              onEdit={() => { setPlanError(null); setRouteView("trip"); }} />
+          ) : (
+            <Plan trip={trip} setTrip={updateTrip} planning={planning} error={planError}
+              home={home} setHome={updateHome} runPlan={runPlan} onDone={() => setRouteView("routes")} />
+          ))}
           {tab === "help" && <Help online={online} />}
           {tab === "contacts" && <Contacts contacts={contacts} setContacts={updateContacts} />}
           {tab === "settings" && (

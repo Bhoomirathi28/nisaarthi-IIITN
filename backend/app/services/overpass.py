@@ -37,14 +37,28 @@ def _kind(tags):
     return None
 
 
-async def places(bbox):
-    s, w, n, e = bbox
-    q = QUERY.format(b=f"{s},{w},{n},{e}")
-    # overpass-api.de refuses requests without an app User-Agent (HTTP 406)
-    async with httpx.AsyncClient(timeout=config.HTTP_TIMEOUT + 15, headers={"User-Agent": config.USER_AGENT}) as client:
-        r = await client.post(config.OVERPASS_URL, data={"data": q})
-        r.raise_for_status()
-        elements = r.json().get("elements", [])
+CCTV_QUERY = """
+[out:json][timeout:15];
+node["man_made"="surveillance"]({b});
+out 400;
+"""
+
+
+async def _query(q, timeout):
+    """Try each Overpass server in turn; the public ones are often overloaded."""
+    last = None
+    async with httpx.AsyncClient(timeout=timeout, headers={"User-Agent": config.USER_AGENT}) as client:
+        for url in config.OVERPASS_URLS:
+            try:
+                r = await client.post(url, data={"data": q})
+                r.raise_for_status()
+                return r.json().get("elements", [])
+            except Exception as e:  # try the next server
+                last = e
+    raise RuntimeError(f"all Overpass servers failed: {type(last).__name__}")
+
+
+def _convert(elements):
     now = datetime.now(timezone.utc).isoformat()
     out = []
     for el in elements:
@@ -67,3 +81,18 @@ async def places(bbox):
             "fetched_at": now,
         })
     return out
+
+
+def _box(bbox):
+    s, w, n, e = bbox
+    return f"{s},{w},{n},{e}"
+
+
+async def places(bbox):
+    """Every kind of place, used when Geoapify Places is unavailable."""
+    return _convert(await _query(QUERY.format(b=_box(bbox)), config.HTTP_TIMEOUT + 15))
+
+
+async def cctv(bbox):
+    """CCTV cameras only (Geoapify has no camera data). Short timeout: cameras are a bonus."""
+    return _convert(await _query(CCTV_QUERY.format(b=_box(bbox)), 10))

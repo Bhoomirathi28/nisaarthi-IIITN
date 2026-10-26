@@ -30,11 +30,21 @@ def _route_from(coords, steps_spec, turns, mode, type_):
     }
 
 
+def is_demo_trip(origin, dest, stops=()):
+    """True only for the sample trip: sample places are never mixed into a real trip."""
+    trip = load()["demo_trip"]
+    return not stops and (geo.haversine(origin, (trip["origin"]["lat"], trip["origin"]["lon"])) < 400 and
+                          geo.haversine(dest, (trip["destination"]["lat"], trip["destination"]["lon"])) < 400)
+
+
+def is_demo_area(point, radius_m=3000):
+    o = load()["demo_trip"]["origin"]
+    return geo.haversine(point, (o["lat"], o["lon"])) < radius_m
+
+
 def routes(origin, dest, mode, stops=()):
     data = load()
-    trip = data["demo_trip"]
-    near_demo = not stops and (geo.haversine(origin, (trip["origin"]["lat"], trip["origin"]["lon"])) < 400 and
-                 geo.haversine(dest, (trip["destination"]["lat"], trip["destination"]["lon"])) < 400)
+    near_demo = is_demo_trip(origin, dest, stops)
     out = []
     if near_demo:
         for type_, r in data["routes"].items():

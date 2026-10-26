@@ -69,9 +69,12 @@ export default function RouteMap({ routes = [], selected = 0, origin, destinatio
 
       const sel = routes[selected];
       if (sel) {
-        sel.places.filter((p) => p.open_when_passing || p.kind === "cctv" || p.kind === "police").forEach((p) => {
+        // Places that count as cover (hollow when they only half count), police and cameras
+        const dots = [...(sel.cover_places || []), ...(sel.places || []).filter((p) => p.kind === "cctv"),
+          ...(sel.police_on_route || []).map((p) => ({ ...p, kind: "police" }))];
+        dots.forEach((p) => {
           const d = document.createElement("div");
-          d.className = "poi-dot";
+          d.className = `poi-dot${p.cover === 0.5 ? " poi-half" : ""}`;
           d.style.background = KIND_COLOR[p.kind] || "#E9B23C";
           markers.current.push(new maplibregl.Marker({ element: d }).setLngLat([p.lon, p.lat]).addTo(m));
         });

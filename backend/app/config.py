@@ -14,6 +14,10 @@ NEBIUS_BASE_URL = os.getenv("NEBIUS_BASE_URL", "https://api.tokenfactory.nebius.
 NEBIUS_MODEL = os.getenv("NEBIUS_MODEL", "").strip()
 TOMTOM_API_KEY = os.getenv("TOMTOM_API_KEY", "").strip()
 OVERPASS_URL = os.getenv("OVERPASS_URL", "https://overpass-api.de/api/interpreter").strip()
+# Tried in order; the public Overpass servers are often busy
+OVERPASS_URLS = [OVERPASS_URL, "https://overpass.kumi.systems/api/interpreter"]
+# Shop and place lists change slowly, so they count as fresh for a day (traffic and weather use FRESH_MINUTES)
+PLACES_FRESH_MINUTES = 24 * 60
 CITY_NAME = os.getenv("CITY_NAME", "Nagpur").strip()
 # Place search prefers results near the city centre and allows this far around it
 # (Hingna, Kamptee, Butibori MIDC and so on).

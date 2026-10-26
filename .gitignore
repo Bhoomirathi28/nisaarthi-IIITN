@@ -25,3 +25,7 @@ backend/data/night_contact_sheet.jpg
 
 # Test cache
 .pytest_cache/
+
+# Server cache of live API results (rebuilt automatically)
+backend/data/cache.json
+backend/data/cache.tmp

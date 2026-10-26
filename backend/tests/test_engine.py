@@ -56,9 +56,12 @@ def test_main_road_route_beats_dark_lane_route():
     a = scoring.score_route(_mock_route("balanced"), places, dep)
     b = scoring.score_route(_mock_route("short"), places, dep)
     assert a["reliability"] > b["reliability"]
-    # shops on the short route close before 2:15 AM, so they must not count as open
-    assert b["factors"]["open_places"]["value"]["count"] <= 1
-    assert a["confidence"] == C.OUTDATED  # sample data is never reported as KNOWN
+    # the short route's own day-time shops are shut at 2:15 AM, so none of them may count as cover
+    day_shops = {"Kirana store", "Mobile shop", "Bakery", "Hardware shop"}
+    assert not day_shops & {p["name"] for p in b["cover_places"]}
+    assert a["factors"]["coverage"]["value"]["covered_share"] > b["factors"]["coverage"]["value"]["covered_share"]
+    # sample data is never reported as KNOWN (coverage turns UNKNOWN when a nearby place has no hours)
+    assert a["confidence"] in (C.OUTDATED, C.UNKNOWN)
 
 
 def test_feasibility():

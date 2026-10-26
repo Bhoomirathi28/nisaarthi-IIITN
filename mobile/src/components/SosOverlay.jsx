@@ -60,7 +60,7 @@ export default function SosOverlay({ contacts, sirenAuto, onClose }) {
                 {t("send_sms")}
               </button>
             )}
-            <button className="btn btn-ghost btn-big" onClick={toggleSiren}>
+            <button className={`btn btn-big btn-siren${siren ? " on" : ""}`} onClick={toggleSiren} aria-pressed={siren}>
               {siren ? t("siren_stop") : t("siren_play")}
             </button>
             <button className="btn btn-text" onClick={onClose}>{t("close")}</button>

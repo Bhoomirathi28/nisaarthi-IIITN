@@ -1,5 +1,6 @@
 """Geoapify: routing (three candidate routes: balanced, short, less_maneuvers) and place search."""
 import asyncio
+import re
 from datetime import datetime, timezone
 
 import httpx
@@ -12,6 +13,17 @@ MODES = {"walk": "walk", "motorcycle": "motorcycle", "drive": "drive"}
 TYPES = ["balanced", "short", "less_maneuvers"]
 
 
+ONTO = re.compile(r"\b(?:onto|along|on)\s+(.+?)(?:\.|,|$)")
+
+
+def _road_name(step):
+    """Road name from the step, or from its instruction ("Turn left onto Great Nag Road.")."""
+    if step.get("name"):
+        return step["name"]
+    m = ONTO.search((step.get("instruction") or {}).get("text") or "")
+    return m.group(1).strip() if m else None
+
+
 def _parse(feature, type_):
     props = feature["properties"]
     geom = feature["geometry"]
@@ -20,7 +32,8 @@ def _parse(feature, type_):
     steps = []
     for leg in props.get("legs", []):
         for s in leg.get("steps", []):
-            steps.append({"distance": s.get("distance", 0), "road_class": s.get("road_class")})
+            steps.append({"distance": s.get("distance", 0), "road_class": s.get("road_class"),
+                          "name": _road_name(s)})
     return {
         "type": type_,
         "coords": coords,
@@ -93,5 +106,66 @@ async def autocomplete(text, near=None, limit=6):
             "address": res.get("address_line2") or "",
             "lat": res["lat"], "lon": res["lon"],
             "source": "live", "fetched_at": now,
+        })
+    return out
+
+
+# ---- Places (shops, food, pharmacies, police, ...) ----
+
+PLACES_URL = "https://api.geoapify.com/v2/places"
+# Geoapify drops results when too many categories go in one request, so ask in small groups.
+PLACE_GROUPS = [
+    "commercial,catering",
+    "healthcare.pharmacy,healthcare.hospital",
+    "service.vehicle.fuel,service.financial.atm,service.police",
+    "public_transport",
+]
+# First matching prefix wins, most specific first (a pharmacy is also "commercial").
+KIND_BY_CATEGORY = [
+    ("healthcare.pharmacy", "pharmacy"), ("commercial.health_and_beauty.pharmacy", "pharmacy"),
+    ("healthcare.hospital", "hospital"), ("service.police", "police"),
+    ("service.vehicle.fuel", "fuel"), ("service.financial.atm", "atm"),
+    ("public_transport", "transport"), ("catering", "food"), ("commercial", "shop"),
+]
+
+
+def _place_kind(categories):
+    for prefix, kind in KIND_BY_CATEGORY:
+        if any(c == prefix or c.startswith(prefix + ".") for c in categories):
+            return kind
+    return None
+
+
+async def places(bbox):
+    """Places in a (south, west, north, east) box, from OpenStreetMap data via Geoapify."""
+    if not config.GEOAPIFY_API_KEY:
+        raise RuntimeError("GEOAPIFY_API_KEY not set")
+    s, w, n, e = bbox
+    async with httpx.AsyncClient(timeout=config.HTTP_TIMEOUT) as client:
+        async def group(cats):
+            r = await client.get(PLACES_URL, params={"categories": cats, "filter": f"rect:{w},{s},{e},{n}",
+                                                     "limit": 500, "apiKey": config.GEOAPIFY_API_KEY})
+            r.raise_for_status()
+            return r.json().get("features") or []
+        results = await asyncio.gather(*[group(c) for c in PLACE_GROUPS])
+    now = datetime.now(timezone.utc).isoformat()
+    out, seen = [], set()
+    for feature in (f for fs in results for f in fs):
+        p = feature.get("properties", {})
+        pid = p.get("place_id")
+        kind = _place_kind(p.get("categories") or [])
+        if not kind or pid in seen or p.get("lat") is None:
+            continue
+        seen.add(pid)
+        raw = (p.get("datasource") or {}).get("raw") or {}
+        out.append({
+            "id": f"gpf-{pid}",
+            "kind": kind,
+            "name": p.get("name"),
+            "lat": p["lat"], "lon": p["lon"],
+            "opening_hours": p.get("opening_hours") or raw.get("opening_hours"),
+            "phone": (p.get("contact") or {}).get("phone") or raw.get("phone"),
+            "source": "live",
+            "fetched_at": now,
         })
     return out

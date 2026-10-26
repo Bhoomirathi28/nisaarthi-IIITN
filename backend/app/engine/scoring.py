@@ -1,8 +1,8 @@
 """Rule-based reliability score for a night-time route.
 
 Factors come straight from the team's notes:
-  open places along the route, fewer gaps between open places (evenly spaced, not clustered),
-  distance on main roads, open help points nearby, fewer turns, open transport locations,
+  coverage by places open when the worker reaches them (engine/coverage.py: share of the route
+  covered and the longest dark stretch, so spread-out beats clustered), distance on main roads, open help points nearby, fewer turns, open transport locations,
   CCTV cameras (OSM man_made=surveillance).
 Every place is checked for whether it will still be open *when the worker passes it*,
 not just right now.
@@ -10,7 +10,7 @@ not just right now.
 from datetime import timedelta
 
 from . import confidence as C
-from . import geo, hours
+from . import coverage, geo, hours
 
 OPEN_PLACE_KINDS = {"shop", "food", "pharmacy", "fuel", "atm"}
 HELP_KINDS = {"police", "hospital", "pharmacy"}
@@ -23,8 +23,7 @@ ALONG_ROUTE_M = 150
 HELP_RADIUS_M = 500
 
 WEIGHTS = {
-    "open_places": 0.20,
-    "spacing": 0.20,
+    "coverage": 0.40,  # replaces the old open_places (0.20) and spacing (0.20) factors
     "main_roads": 0.15,
     "help_points": 0.15,
     "turns": 0.10,
@@ -95,23 +94,18 @@ def score_route(route, pois, departure, fresh_minutes=15, now=None):
     if empty_label == C.KNOWN:
         empty_label = C.PROBABLE
 
-    # 1. Open places along the route
-    per_km = len(open_places) / length_km
-    factors["open_places"] = {
-        "score": _clamp(per_km / 4.0),
-        "value": {"count": len(open_places), "per_km": round(per_km, 1)},
-        "label": labels_of(open_places, empty_label),
-    }
-
-    # 2. Fewer gaps between open places (evenly spaced beats clustered)
-    stops = [0] + [p["position_m"] for p in open_places] + [length_m]
-    gaps = [b - a for a, b in zip(stops, stops[1:])]
-    max_gap = max(gaps) if gaps else length_m
-    factors["spacing"] = {
-        "score": _clamp(1 - (max_gap - 300) / 1200),
-        "value": {"max_gap_m": round(max_gap), "positions_m": [p["position_m"] for p in open_places],
-                  "length_m": round(length_m)},
-        "label": labels_of(open_places, empty_label),
+    # 1. Coverage: how much of the route has a place open when the worker gets there
+    cov = coverage.measure({"coords": route["coords"], "duration_s": duration_s}, pois, departure,
+                           fresh_minutes, now)
+    no_place_data = not pois and route.get("poi_label") == C.UNKNOWN
+    factors["coverage"] = {
+        "score": None if no_place_data else cov["score"],
+        "value": {k: cov[k] for k in ("covered_share", "longest_dark_m", "dark_at_end", "open_count",
+                                      "unknown_hours", "length_m")}
+                 | {"positions_m": [p["position_m"] for p in cov["open_places"]],
+                    "cover": [p["cover"] for p in cov["open_places"]]},
+        "label": C.UNKNOWN if no_place_data else (cov["label"] if cov["open_places"] or cov["unknown_hours"]
+                                                   else empty_label),
     }
 
     # 3. Distance on main roads
@@ -157,13 +151,16 @@ def score_route(route, pois, departure, fresh_minutes=15, now=None):
         "label": labels_of(transport, empty_label),
     }
 
-    # 7. CCTV cameras
+    # 7. CCTV cameras (unknown when the camera source was unavailable, not "none")
     cams = [p for p in near if p["kind"] in CCTV_KINDS]
-    factors["cctv"] = {
-        "score": _clamp((len(cams) / length_km) / 3.0),
-        "value": {"count": len(cams)},
-        "label": labels_of(cams, empty_label),
-    }
+    if route.get("cctv_known") is False:
+        factors["cctv"] = {"score": None, "value": None, "label": C.UNKNOWN}
+    else:
+        factors["cctv"] = {
+            "score": _clamp((len(cams) / length_km) / 3.0),
+            "value": {"count": len(cams)},
+            "label": labels_of(cams, empty_label),
+        }
 
     usable = {k: f for k, f in factors.items() if f["score"] is not None}
     wsum = sum(WEIGHTS[k] for k in usable) or 1
@@ -177,6 +174,7 @@ def score_route(route, pois, departure, fresh_minutes=15, now=None):
         "reliability": round(reliability * 100),
         "factors": factors,
         "places": along,
+        "cover_places": cov["open_places"],
         "length_m": round(length_m),
         "duration_s": round(duration_s),
         "confidence": C.worst([f["label"] for f in factors.values() if f["score"] is not None]),
@@ -214,6 +212,12 @@ def reasons(result):
     f = result["factors"]
     out = []
     for key, f_ in f.items():
+        if key == "coverage":
+            if f_["score"] is None:
+                out.append({"code": "coverage_unknown", "tone": "neutral"})
+            else:
+                out.append(coverage.reason({"score": f_["score"], **f_["value"]}))
+            continue
         if f_["score"] is None:
             out.append({"code": f"{key}_unknown", "tone": "neutral"})
         elif f_["score"] >= 0.7:
