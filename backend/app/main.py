@@ -10,7 +10,7 @@ import json
 
 from . import config, planner, users
 from .vision import street_check
-from .services import mockdata
+from .services import keycheck, mockdata
 
 app = FastAPI(title="NISAARTHI API", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -115,18 +115,23 @@ def update_contacts(body: ContactsUpdate, user=Depends(current_user), conn=Depen
 
 
 @app.get("/health")
-def health():
-    return {
+async def health(check: bool = False):
+    """Which keys are set. With ?check=true, also tests each key with one small live call."""
+    out = {
         "status": "ok",
         "force_mock": config.FORCE_MOCK,
         "sources": {
             "geoapify": bool(config.GEOAPIFY_API_KEY),
             "tavily": bool(config.TAVILY_API_KEY),
-            "nebius": bool(config.NEBIUS_API_KEY),
+            "nebius": bool(config.NEBIUS_API_KEY and config.NEBIUS_MODEL),
+            "tomtom": bool(config.TOMTOM_API_KEY),
             "overpass": True,
             "open_meteo": True,
         },
     }
+    if check:
+        out["keys"] = await keycheck.check_all()
+    return out
 
 
 @app.get("/demo")

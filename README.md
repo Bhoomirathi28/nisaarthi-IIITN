@@ -227,7 +227,7 @@ To build an APK in Android Studio: **Build → Build Bundle(s) / APK(s) → Buil
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/health` | Which sources have keys, and whether mock mode is on |
+| GET | `/health` | Which sources have keys, and whether mock mode is on. Add `?check=true` to test each key with one live call (working / not_set / rejected / model_not_found / error) |
 | GET | `/demo` | The sample trip (Nagpur, 2:15 AM → 3:00 AM, walking) |
 | GET | `/places/search?text=&lat=&lon=` | Place autocomplete (Geoapify) within 40 km of Nagpur; falls back to cache, then sample places |
 | POST | `/plan` | `{origin, destination, stops (0–3), departure, deadline, mode}` → ranked routes with scores, factors, labels, places, weather, reports, AI estimate |
@@ -288,5 +288,5 @@ Night indigo base, chosen because the app is opened at 2 AM. An original Madhuba
 - **Map tiles:** use the public OpenStreetMap tile server, fine for a demo. For heavy use, switch to a tile provider such as Geoapify or MapTiler. Offline, tiles don't load, but the plan is still shown as text.
 - **Opening hours:** come from OpenStreetMap, which is incomplete in many Indian areas. Missing or unreadable hours are shown as UNKNOWN, never guessed.
 - **Ola and Rapido links:** the Ola link pre-fills pickup and drop; Rapido opens its site/app without pre-filled locations.
-- **Nemotron model ID:** copy the exact ID from the Token Factory catalog into `NEBIUS_MODEL`.
+- **Nemotron model ID:** copy the exact ID from the Token Factory catalog into `NEBIUS_MODEL`. `/health?check=true` lists the Nemotron IDs your key can use if the one set is wrong.
 - **Siren volume:** follows the phone's media volume.

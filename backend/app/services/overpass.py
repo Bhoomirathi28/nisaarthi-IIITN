@@ -40,7 +40,8 @@ def _kind(tags):
 async def places(bbox):
     s, w, n, e = bbox
     q = QUERY.format(b=f"{s},{w},{n},{e}")
-    async with httpx.AsyncClient(timeout=config.HTTP_TIMEOUT + 15) as client:
+    # overpass-api.de refuses requests without an app User-Agent (HTTP 406)
+    async with httpx.AsyncClient(timeout=config.HTTP_TIMEOUT + 15, headers={"User-Agent": config.USER_AGENT}) as client:
         r = await client.post(config.OVERPASS_URL, data={"data": q})
         r.raise_for_status()
         elements = r.json().get("elements", [])

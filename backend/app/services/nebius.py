@@ -32,6 +32,8 @@ async def _one(client, route):
         "model": config.NEBIUS_MODEL,
         "temperature": 0.2,
         "max_tokens": 300,
+        # Nemotron reasons before answering by default and used up the token limit; we only need the JSON
+        "chat_template_kwargs": {"enable_thinking": False},
         "messages": [{"role": "system", "content": SYSTEM},
                      {"role": "user", "content": json.dumps(_payload(route))}],
     }
@@ -52,7 +54,7 @@ async def _one(client, route):
 
 
 async def score_routes(routes):
-    if not config.NEBIUS_API_KEY:
+    if not (config.NEBIUS_API_KEY and config.NEBIUS_MODEL):
         return [None] * len(routes)
     async with httpx.AsyncClient(timeout=config.HTTP_TIMEOUT + 8) as client:
         res = await asyncio.gather(*[_one(client, r) for r in routes], return_exceptions=True)
