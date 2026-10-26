@@ -338,3 +338,14 @@ input:focus { border-color: var(--haldi); outline: none; }
 .police-list li { display: grid; gap: 2px; }
 .police-list .row-gap { margin: 4px 0 0; }
 .poi-half { background: var(--ink) !important; border-color: var(--haldi) !important; }
+
+/* Shake-for-SOS card on the routes page (Phase 4) */
+.shake-card { border-left: 3px solid var(--neem); }
+.shake-card.off { border-left-color: var(--ash); }
+.shake-title { margin: 0; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.shake-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--neem); box-shadow: 0 0 0 3px rgba(111, 174, 123, 0.25); }
+.shake-fixes { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px; }
+.shake-fixes li { display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding-top: 8px; border-top: 1px dashed rgba(233, 178, 60, 0.2); }
+.shake-fixes .btn { flex: none; }
+.sens-hint { flex-basis: 100%; margin: 2px 0 0; }

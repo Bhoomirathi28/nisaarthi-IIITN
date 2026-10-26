@@ -19,10 +19,19 @@ The Android app is React + Vite wrapped with Capacitor. The backend is Python + 
 | 1 | Sign-up page: language, name, mobile, emergency contacts; stays signed in; works offline | **Done** |
 | 2 | Trip page: source, optional stops, destination, departure time, arrival deadline, search | **Done** (team check pending) |
 | 3 | Routes page: all routes by safety score, coverage-based shop spacing, open-when-you-reach, TomTom traffic, weather, Tavily incidents, Nemotron scores, booking links, police stations, siren | **Done** (team check pending) |
-| 4 | Safety layer: shake opens the app even when closed, automatic offline SOS SMS, siren | Planned |
+| 4 | Safety layer: shake opens the app even when closed, automatic offline SOS SMS, siren | **Built**, needs a real-phone test |
 | 5 | Feedback loop: post-trip ratings and corrections improve scores | Planned |
 | 6 | Novelty, "Rider Eyes": delivery riders' phones act as moving CCTV, live street lighting and activity scores | Street check built and runs on TrafficCAM; phone capture and map planned |
 | 7 | 12 regional languages and the hand-drawn Madhubani redesign | Planned |
+
+### Phase 4 details (Android)
+
+- Shake protection runs **only during a trip**: it starts when Search routes opens the routes page and stops on End trip, on arriving (a re-plan finds you within 150 m of the destination), or an hour after the reach-by time.
+- A small foreground service (`ShakeService.kt`) listens to the accelerometer with the app closed or the screen locked. It shows a quiet "Shake for SOS is on" notification with an End trip button.
+- Three hard shakes → 5-second countdown with vibration and a Cancel button (in the notification and on screen; opens over the lock screen) → SOS SMS with the location to every emergency contact, sent by the phone with no internet → siren at full **alarm** volume (Settings: "Play siren with SOS").
+- Sensitivity in Settings: Hard / Normal / Light. Hard needs 4 strong jolts and suits two-wheeler riders, whose phones get bumped.
+- The routes page shows the protection status and one-tap fixes: SMS permission, notifications, full-screen alerts, battery optimisation.
+- Native unit tests: `ShakeDetectorTest.kt` (walking never triggers, one bump counts once, cooldown, sensitivity levels, SMS text).
 
 ### Phase 3 details
 
@@ -197,34 +206,22 @@ Open the URL Vite prints, then use your browser's mobile device view.
 
 ### 3. Android
 
-Needs Android Studio and JDK 17.
+`mobile/android` is in the repo, with the native shake-for-SOS code. Needs Android Studio (its bundled JDK 21 works; the system Java can be newer, which Gradle 8.x refuses). Minimum Android 8.0.
 
 ```bash
 cd mobile
 npm install
-npm run build
-npx cap add android           # first time only, creates mobile/android
+npm run android               # builds the web app, syncs it into android/, opens Android Studio; press Run
 ```
 
-Then add these lines to `mobile/android/app/src/main/AndroidManifest.xml`, inside `<manifest>` and above `<application>`:
-
-```xml
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<uses-permission android:name="android.permission.VIBRATE" />
-<uses-feature android:name="android.hardware.location.gps" android:required="false" />
-<queries>
-  <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="sms" /></intent>
-  <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="tel" /></intent>
-  <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="geo" /></intent>
-  <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="https" /></intent>
-</queries>
-```
-
-Then:
+From the command line instead (Windows, Git Bash):
 
 ```bash
-npm run android               # builds, syncs and opens Android Studio; press Run
+cd mobile && npm run build && npx cap sync android
+cd android
+echo 'sdk.dir=C:/Users/<you>/AppData/Local/Android/Sdk' > local.properties   # first time only
+JAVA_HOME="/c/Program Files/Android/Android Studio/jbr" ./gradlew assembleDebug testDebugUnitTest
+# APK: app/build/outputs/apk/debug/app-debug.apk
 ```
 
 Server address inside the app: the emulator reaches your computer at `http://10.0.2.2:8000`. A real phone on the same Wi-Fi uses `http://<your-computer-LAN-IP>:8000`. Change it any time under **Settings** in the app.
@@ -293,8 +290,8 @@ Night indigo base, chosen because the app is opened at 2 AM. An original Madhuba
 
 ## Known limits
 
-- **SMS:** SOS opens the phone's SMS app with all contacts and the location already filled in; one tap sends it. Fully automatic sending needs the `SEND_SMS` permission and a native plugin, which Google Play restricts.
-- **Shake:** works while the app is open or in recent use. Shake-to-SOS when the app is fully closed needs an Android background service.
+- **SMS:** during a trip on Android, a shake sends the SOS SMS by itself (`SEND_SMS`, no internet needed). Google Play allows `SEND_SMS` only for approved uses, so a Play Store release may need a different route. Elsewhere (SOS button, browser), SOS opens the SMS app with everything filled in; one tap sends it.
+- **Shake:** on Android it works with the app closed or the screen locked, but only during a trip (from Search routes until End trip, arriving, or an hour after the reach-by time). It stops if the app is force-stopped or the phone restarts. Some brands (Xiaomi, Realme, Oppo, Vivo) kill background apps unless battery optimisation is turned off for the app; the routes page offers that. Opening over the lock screen needs the "full-screen alerts" permission on Android 14+.
 - **Map tiles:** use the public OpenStreetMap tile server, fine for a demo. For heavy use, switch to a tile provider such as Geoapify or MapTiler. Offline, tiles don't load, but the plan is still shown as text.
 - **Opening hours:** come from OpenStreetMap, which is incomplete in many Indian areas. Missing or unreadable hours are shown as UNKNOWN, never guessed.
 - **Ola and Rapido links:** the Ola link pre-fills pickup and drop; Rapido opens its site/app without pre-filled locations.

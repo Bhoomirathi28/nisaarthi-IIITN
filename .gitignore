@@ -29,3 +29,6 @@ backend/data/night_contact_sheet.jpg
 # Server cache of live API results (rebuilt automatically)
 backend/data/cache.json
 backend/data/cache.tmp
+
+# Android Studio settings (per computer)
+mobile/android/.idea/

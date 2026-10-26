@@ -10,6 +10,7 @@ import { aged } from "../lib/labels";
 import { openUrl } from "../lib/native";
 import { call } from "../lib/sos";
 import { clock, metres, minutesSince } from "../lib/time";
+import { askPermissions, openBatterySettings, openFullScreenSettings } from "../lib/shakeSos";
 
 const REPLAN_MS = 2 * 60 * 1000;
 
@@ -133,8 +134,54 @@ function RouteDetails({ r, label, t }) {
   );
 }
 
+// Phase 4: shake-for-SOS status for this trip, with one-tap fixes for anything that would stop it working.
+function ShakeCard({ shake, onEndTrip, onRefresh, onStart }) {
+  const { t } = useT();
+  // Settings screens open outside the app; check again when the user comes back
+  useEffect(() => {
+    const again = () => document.visibilityState === "visible" && onRefresh();
+    document.addEventListener("visibilitychange", again);
+    return () => document.removeEventListener("visibilitychange", again);
+  }, [onRefresh]);
+
+  if (!shake.running) {
+    return (
+      <section className="panel shake-card off">
+        <p className="shake-title">{t("shake_off_trip")}</p>
+        {shake.error === "location_permission" && <p className="muted small">{t("shake_needs_location")}</p>}
+        <button className="btn btn-ghost" onClick={onStart}>{t("shake_turn_on")}</button>
+      </section>
+    );
+  }
+  const fixes = [
+    !shake.smsAllowed && { key: "fix_sms", run: async () => { await askPermissions(); onRefresh(); } },
+    !shake.notificationsAllowed && { key: "fix_notifications", run: async () => { await askPermissions(); onRefresh(); } },
+    !shake.fullScreenAllowed && { key: "fix_fullscreen", run: openFullScreenSettings },
+    !shake.batteryUnrestricted && { key: "fix_battery", run: openBatterySettings },
+  ].filter(Boolean);
+  return (
+    <section className="panel shake-card">
+      <div className="row-between">
+        <p className="shake-title"><span className="shake-dot" aria-hidden="true" /> {t("shake_on_title")}</p>
+        <button className="btn btn-text" onClick={onEndTrip}>{t("end_trip")}</button>
+      </div>
+      <p className="muted small">{t("shake_on_text")}</p>
+      {fixes.length > 0 && (
+        <ul className="shake-fixes">
+          {fixes.map((f) => (
+            <li key={f.key}>
+              <span className="small">{t(f.key)}</span>
+              <button className="btn btn-ghost" onClick={f.run}>{t("allow")}</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 // Phase 3: all routes ranked safest-feasible first. Tap a card to see why.
-export default function Routes({ plan, error, online, runPlan, onEdit }) {
+export default function Routes({ plan, error, online, runPlan, onEdit, shake, shakeOn, onEndTrip, onRefreshShake, onStartShake }) {
   const { t } = useT();
   const [sel, setSel] = useState(0);
   const [, tick] = useState(0);
@@ -172,6 +219,9 @@ export default function Routes({ plan, error, online, runPlan, onEdit }) {
         <button className="btn btn-text" onClick={onEdit}>{t("edit_trip")}</button>
       </div>
       {(!online || error) && <p className="banner">{t(online ? error : "offline_banner")}</p>}
+      {shake?.available && shakeOn && (
+        <ShakeCard shake={shake} onEndTrip={onEndTrip} onRefresh={onRefreshShake} onStart={onStartShake} />
+      )}
 
       <RouteMap routes={routes} selected={sel} origin={origin} stops={stops} destination={dest} />
 

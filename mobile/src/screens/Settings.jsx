@@ -31,6 +31,19 @@ export default function Settings({ lang, setLang, settings, setSettings, onBack 
           <input type="checkbox" checked={settings.shake}
             onChange={(e) => setSettings({ ...settings, shake: e.target.checked })} />
         </label>
+        {settings.shake && (
+          <fieldset className="segmented">
+            <legend className="field-label">{t("shake_sensitivity")}</legend>
+            {["low", "normal", "high"].map((lvl) => (
+              <label key={lvl} className={(settings.sensitivity || "normal") === lvl ? "on" : ""}>
+                <input type="radio" name="sensitivity" checked={(settings.sensitivity || "normal") === lvl}
+                  onChange={() => setSettings({ ...settings, sensitivity: lvl })} />
+                {t(`sens_${lvl}`)}
+              </label>
+            ))}
+            <p className="muted small sens-hint">{t("shake_sensitivity_hint")}</p>
+          </fieldset>
+        )}
         <label className="switch">
           <span>{t("siren_setting")}</span>
           <input type="checkbox" checked={settings.sirenAuto}
